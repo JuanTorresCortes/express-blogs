@@ -51,12 +51,12 @@ router.get("/", (req, res) => {
   res.json({ message: "hello form blogs" });
 });
 
-// ◀︎ get all blogs ▶︎ /////////////////////////////////////////////////
+// ◀︎ get all blogs ▶︎ ///////////////////////////////////////////////////////////////////
 router.get("/all-blogs", (req, res) => {
   res.status(200).json({ success: true, data: listBlogs });
 });
 
-// ◀︎ delete by id ▶︎ /////////////////////////////////////////////////////
+// ◀︎ delete by id ▶︎ ////////////////////////////////////////////////////////////////////
 router.delete("/delete-blog/:id", (req, res) => {
   //.indexOf
   const id = req.params.id;
@@ -72,7 +72,7 @@ router.delete("/delete-blog/:id", (req, res) => {
   res.status(200).json({ success: true, data: "blog deleted" });
 });
 
-// ◀︎ get blog by id ▶︎ /////////////////////////////////////////////////
+// ◀︎ get blog by id ▶︎ //////////////////////////////////////////////////////////////////
 router.get("/get-blog/:id", (req, res) => {
   const id = req.params.id; // grab id
   const findIndexOfBlog = listBlogs.findIndex((blog) => blog.id === id); // grab index of blog id and set it to findIndexOfBlog
@@ -93,7 +93,7 @@ router.get("/get-blog/:id", (req, res) => {
   res.status(200).json({ success: true, data: blogInfo });
 });
 
-// ◀︎ get some blogs route by author ▶︎ ///////////////////////////////////
+// ◀︎ get some blogs route by author ▶︎ //////////////////////////////////////////////////
 router.get("/get-blog-by-author/:author/", (req, res) => {
   const author = req.params.author.toLowerCase(); // grab author
   const findIndex = listBlogs.findIndex(
@@ -115,11 +115,13 @@ router.get("/get-blog-by-author/:author/", (req, res) => {
   res.status(200).json({ success: true, data: blogInfo });
 });
 
-// ◀︎ post one blog route ▶︎///////////////////////////////////////////////
+// ◀︎ post one blog route ▶︎ /////////////////////////////////////////////////////////////
 router.post("/new-blog", (req, res) => {
+  let blogID = `blog${listBlogs.length + 1}`; // creates a id for new post
+
   const newBlog = {
     // create a new object with request body input
-    id: req.body.id,
+    id: blogID,
     title: req.body.title,
     description: req.body.description,
     author: req.body.author,
@@ -144,6 +146,37 @@ router.post("/new-blog", (req, res) => {
   res
     .status(200)
     .json({ success: true, message: "new blog was successfully posted" });
+});
+
+// ◀︎ update (put) one by id route ▶︎ ////////////////////////////////////////////////////
+router.put("/update-blog/:id", (req, res) => {
+  let id = req.params.id;
+  const findIndex = listBlogs.findIndex((blog) => blog.id === id);
+
+  if (findIndex === -1) {
+    return res.status(400).json({ success: false, message: "blog not found" });
+  }
+
+  // grab all the current blog original information
+  const currentBlog = listBlogs[findIndex];
+
+  // make new object
+  const updateBlogInfo = { ...currentBlog };
+
+  for (let key in req.body) {
+    // loop through the request body to check if any keys have objects as values
+    //console.log(typeof req.body[key]); string
+    if (typeof req.body[key] === "object") {
+      updateBlogInfo[key] = {
+        ...updateBlogInfo[key],
+        ...req.body[key],
+      };
+    } else {
+      updateBlogInfo[key] = req.body[key];
+    }
+  }
+  listBlogs.splice(findIndex, 1, updateBlogInfo);
+  res.status(200).json({ success: true });
 });
 
 module.exports = router;
