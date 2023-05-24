@@ -1,6 +1,7 @@
 const { Variable } = require("eslint-scope");
 const express = require("express");
 const router = express.Router();
+const { v4: uuid } = require("uuid");
 
 const listBlogs = [
   {
@@ -93,7 +94,7 @@ router.get("/get-blog/:id", (req, res) => {
   res.status(200).json({ success: true, data: blogInfo });
 });
 
-// ◀︎ get some blogs route by author ▶︎ //////////////////////////////////////////////////
+// ◀︎ get some blogs by author ▶︎ /////////////////////////////////////////////////////////
 router.get("/get-blog-by-author/:author/", (req, res) => {
   const author = req.params.author.toLowerCase(); // grab author
   const findIndex = listBlogs.findIndex(
@@ -115,18 +116,18 @@ router.get("/get-blog-by-author/:author/", (req, res) => {
   res.status(200).json({ success: true, data: blogInfo });
 });
 
-// ◀︎ post one blog route ▶︎ /////////////////////////////////////////////////////////////
+// ◀︎ post a new-blog ▶︎ /////////////////////////////////////////////////////////////
 router.post("/new-blog", (req, res) => {
-  let blogID = `blog${listBlogs.length + 1}`; // creates a id for new post
+  //let blogID = `blog${listBlogs.length + 1}`; // creates a id for new post
 
   const newBlog = {
     // create a new object with request body input
-    id: blogID,
+    id: uuid(),
     title: req.body.title,
     description: req.body.description,
     author: req.body.author,
-    createdAt: req.body.createdAt,
-    lastModified: req.body.lastModified,
+    createdAt: new Date().toISOString(),
+    lastModified: new Date().toISOString(),
   };
   let errorArray = []; //Variable to hold errors
 
@@ -148,35 +149,91 @@ router.post("/new-blog", (req, res) => {
     .json({ success: true, message: "new blog was successfully posted" });
 });
 
+// ⚠️ this is my code ⚠️
 // ◀︎ update (put) one by id route ▶︎ ////////////////////////////////////////////////////
+// router.put("/update-blog/:id", (req, res) => {
+//   let id = req.params.id;
+//   const findIndex = listBlogs.findIndex((blog) => blog.id === id);
+
+//   if (findIndex === -1) {
+//     return res.status(400).json({ success: false, message: "blog not found" });
+//   }
+
+//   // grab all the current blog original information
+//   const currentBlog = listBlogs[findIndex];
+
+//   // make new object
+//   const updateBlogInfo = { ...currentBlog };
+
+//   for (let key in req.body) {
+//     // loop through the request body to check if any keys have objects as values
+//     //console.log(typeof req.body[key]); string
+//     if (typeof req.body[key] === "object") {
+//       updateBlogInfo[key] = {
+//         ...updateBlogInfo[key],
+//         ...req.body[key],
+//       };
+//     } else {
+//       updateBlogInfo[key] = req.body[key];
+//       updateBlogInfo.lastModified = new Date().toISOString();
+//     }
+//   }
+//   listBlogs.splice(findIndex, 1, updateBlogInfo); // erase it replace it
+//   res.status(200).json({ success: true });
+// });
+
+// ⛔️ this is not my code this is ChatGPT assisted code
 router.put("/update-blog/:id", (req, res) => {
-  let id = req.params.id;
+  const { title, description, author } = req.body;
+  const requiredFields = ["title", "description", "author"];
+
+  // Check if all required fields are present in the request body
+  const isValid = requiredFields.every(
+    (field) => req.body[field]
+  );
+
+  if (!isValid) {
+    // If any required field is missing, return a 400 error with a message
+    return res.status(400).json({
+      success: false,
+      message: `${requiredFields.join(", ")} must all be included in the request`,
+    });
+  }
+
+  const id = req.params.id;
   const findIndex = listBlogs.findIndex((blog) => blog.id === id);
 
   if (findIndex === -1) {
-    return res.status(400).json({ success: false, message: "blog not found" });
+    // If the blog with the specified id is not found, return a 400 error with a message
+    return res.status(400).json({
+      success: false,
+      message: "blog not found",
+    });
   }
 
-  // grab all the current blog original information
-  const currentBlog = listBlogs[findIndex];
-
-  // make new object
-  const updateBlogInfo = { ...currentBlog };
+  // Create a new object with the current blog's information
+  const updateBlogInfo = { ...listBlogs[findIndex] };
 
   for (let key in req.body) {
-    // loop through the request body to check if any keys have objects as values
-    //console.log(typeof req.body[key]); string
     if (typeof req.body[key] === "object") {
+      // If the value of a key is an object, merge it with the existing value
       updateBlogInfo[key] = {
         ...updateBlogInfo[key],
         ...req.body[key],
       };
     } else {
+      // If the value of a key is not an object, update it directly
       updateBlogInfo[key] = req.body[key];
+      updateBlogInfo.lastModified = new Date().toISOString();
     }
   }
-  listBlogs.splice(findIndex, 1, updateBlogInfo);
+
+  // Update the blog in the list of blogs
+  listBlogs[findIndex] = updateBlogInfo;
+
+  // Return a success response
   res.status(200).json({ success: true });
 });
+
 
 module.exports = router;
