@@ -167,7 +167,6 @@ router.post("/new-blog", (req, res) => {
 
 //   for (let key in req.body) {
 //     // loop through the request body to check if any keys have objects as values
-//     //console.log(typeof req.body[key]); string
 //     if (typeof req.body[key] === "object") {
 //       updateBlogInfo[key] = {
 //         ...updateBlogInfo[key],
@@ -178,14 +177,14 @@ router.post("/new-blog", (req, res) => {
 //       updateBlogInfo.lastModified = new Date().toISOString();
 //     }
 //   }
-//   listBlogs.splice(findIndex, 1, updateBlogInfo); // erase it replace it
+//   listBlogs.splice(findIndex, 1, updateBlogInfo); // erase it and replace it
 //   res.status(200).json({ success: true });
 // });
 
-// ⛔️ this is not my code this is ChatGPT assisted code
+// ⛔️ this version is not entirely my code this is ChatGPT assisted code ⛔️
 router.put("/update-blog/:id", (req, res) => {
   const { title, description, author } = req.body;
-  const requiredFields = ["title", "description", "author"];
+  const requiredFields = ["title", "description", "author"];// <<<< this is my favorite part 
 
   // Check if all required fields are present in the request body
   const isValid = requiredFields.every(
